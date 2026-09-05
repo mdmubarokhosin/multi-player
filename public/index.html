@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Gateway API — Multi-Provider AI REST API</title>
+  <meta name="description" content="Production-ready multi-provider AI gateway. OpenRouter, Groq, Gemini, or any custom OpenAI-compatible endpoint. Deployed on Cloudflare Pages." />
+  <style>
+    :root {
+      --bg: #0b0f14;
+      --panel: #111823;
+      --panel-2: #0e1520;
+      --border: #1f2b3a;
+      --text: #e6edf3;
+      --muted: #8b98a9;
+      --accent: #22d3a7;
+      --accent-dim: rgba(34, 211, 167, 0.12);
+      --warn: #f5b64d;
+      --bad: #f47067;
+      --code-bg: #0a0e14;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 48px 20px 64px; }
+    header { margin-bottom: 36px; }
+    .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+    .badge {
+      font-family: var(--mono); font-size: 11px; letter-spacing: 0.4px;
+      padding: 3px 10px; border-radius: 999px;
+      border: 1px solid var(--border); color: var(--muted);
+      background: var(--panel-2);
+    }
+    .badge.ok { color: var(--accent); border-color: rgba(34,211,167,0.35); background: var(--accent-dim); }
+    h1 { font-size: clamp(26px, 5vw, 40px); font-weight: 800; letter-spacing: -0.5px; }
+    h1 .accent { color: var(--accent); }
+    .tagline { color: var(--muted); margin-top: 10px; max-width: 640px; }
+    h2 {
+      font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px;
+      color: var(--muted); margin: 40px 0 14px; font-weight: 700;
+    }
+    .card {
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px 20px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th { text-align: left; color: var(--muted); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border); font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px; }
+    td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    code { font-family: var(--mono); font-size: 13px; background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 1px 7px; }
+    .method { font-family: var(--mono); font-weight: 700; font-size: 12px; padding: 2px 8px; border-radius: 6px; }
+    .method.get { color: #61affe; background: rgba(97,175,255,0.12); }
+    .method.post { color: #49cc90; background: rgba(73,204,144,0.12); }
+    pre {
+      background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.55;
+      position: relative;
+    }
+    pre .c { color: #5c6b7f; }
+    .copy-btn {
+      position: absolute; top: 10px; right: 10px;
+      font-family: var(--mono); font-size: 11px; color: var(--muted);
+      background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+      padding: 4px 10px; cursor: pointer;
+    }
+    .copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+    #status-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--mono); font-size: 13px;
+      padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border);
+      background: var(--panel-2); color: var(--muted);
+    }
+    #status-pill .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+    #status-pill.on { color: var(--accent); border-color: rgba(34,211,167,0.4); }
+    #status-pill.on .dot { background: var(--accent); box-shadow: 0 0 8px rgba(34,211,167,0.7); }
+    #status-pill.off { color: var(--bad); border-color: rgba(244,112,103,0.4); }
+    #status-pill.off .dot { background: var(--bad); }
+    #providers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+    .provider { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; }
+    .provider .p-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+    .provider .p-name { font-weight: 700; font-size: 15px; }
+    .provider .p-state { font-family: var(--mono); font-size: 11px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--border); }
+    .provider .p-state.configured { color: var(--accent); border-color: rgba(34,211,167,0.35); background: var(--accent-dim); }
+    .provider .p-state.missing { color: var(--warn); border-color: rgba(245,182,77,0.35); }
+    .provider .p-desc { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+    .provider .p-model { font-family: var(--mono); font-size: 12px; color: var(--text); background: var(--code-bg); border: 1px solid var(--border); border-radius: 6px; padding: 4px 9px; display: inline-block; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+    footer { margin-top: 48px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--border); padding-top: 20px; }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="badge-row">
+        <span class="badge">AI GATEWAY API v2</span>
+        <span class="badge">CLOUDFLARE PAGES READY</span>
+        <span class="badge ok" id="version-badge">v—</span>
+      </div>
+      <h1>Multi-Provider <span class="accent">AI Gateway</span></h1>
+      <p class="tagline">
+        One REST endpoint, any AI provider. OpenRouter, Groq, Google Gemini, or any custom
+        OpenAI-compatible server — switchable per request, pluggable in minutes.
+      </p>
+      <p style="margin-top:18px"><span id="status-pill"><span class="dot"></span><span id="status-text">checking API…</span></span></p>
+    </header>
+
+    <h2>Endpoints</h2>
+    <div class="card" style="padding:6px 8px">
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Path</th><th>Auth</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="method get">GET</span></td><td><code>/api/v1/health</code></td><td>public</td><td>Liveness probe</td></tr>
+          <tr><td><span class="method get">GET</span></td><td><code>/api/v1/providers</code></td><td>key*</td><td>List providers, models &amp; configuration status</td></tr>
+          <tr><td><span class="method post">POST</span></td><td><code>/api/v1/chat</code></td><td>key*</td><td>Chat completion via any configured provider</td></tr>
+        </tbody>
+      </table>
+      <p style="color:var(--muted); font-size:12px; padding:8px 10px 4px">* key = required only when <code>API_SECRET_KEY</code> is set on the server (header: <code>X-API-Key</code>)</p>
+    </div>
+
+    <h2>Available providers (live)</h2>
+    <div id="providers-grid"><div class="card" style="color:var(--muted)">loading…</div></div>
+
+    <h2>Quick test</h2>
+    <div class="grid-2">
+      <pre><span class="copy-btn" data-copy="curl-1">copy</span><code id="curl-1"><span class="c"># Chat (default provider)</span>
+curl -X POST https://YOUR-DOMAIN/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What is the meaning of life?"}'</code></pre>
+      <pre><span class="copy-btn" data-copy="curl-2">copy</span><code id="curl-2"><span class="c"># Pick a provider + multi-turn</span>
+curl -X POST https://YOUR-DOMAIN/api/v1/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "provider": "openrouter",
+    "messages": [
+      {"role": "user", "content": "Hi!"},
+      {"role": "assistant", "content": "Hello!"},
+      {"role": "user", "content": "Tell me a joke"}
+    ],
+    "temperature": 0.8
+  }'</code></pre>
+    </div>
+
+    <footer>
+      Full docs in <code>README.md</code> · Deploy guide in <code>DEPLOYMENT.md</code> · Add your own provider in
+      <code>src/providers/</code> (see <code>_template.js</code>)
+      <br />Built for Cloudflare Pages · Functions runtime · <span id="footer-provider"></span>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      var pill = document.getElementById('status-pill');
+      var text = document.getElementById('status-text');
+      var vBadge = document.getElementById('version-badge');
+      var grid = document.getElementById('providers-grid');
+      var footerProvider = document.getElementById('footer-provider');
+
+      // Health check -> status pill
+      fetch('/api/v1/health')
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function (data) {
+          pill.classList.add('on');
+          text.textContent = 'API online';
+          if (data.version) vBadge.textContent = 'v' + data.version;
+          if (data.defaultProvider) footerProvider.textContent = 'default provider: ' + data.defaultProvider;
+        })
+        .catch(function () {
+          pill.classList.add('off');
+          text.textContent = 'API offline (deploy or run locally: npm start)';
+        });
+
+      // Providers -> cards
+      fetch('/api/v1/providers')
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+        .then(function (data) {
+          grid.innerHTML = '';
+          (data.providers || []).forEach(function (p) {
+            var card = document.createElement('div');
+            card.className = 'provider';
+            var state = p.configured ? 'configured' : 'missing';
+            card.innerHTML =
+              '<div class="p-head"><span class="p-name"></span>' +
+              '<span class="p-state ' + state + '">' + (p.configured ? 'configured' : 'not configured') + '</span></div>' +
+              '<div class="p-desc"></div>' +
+              (p.defaultModel ? '<span class="p-model"></span>' : '');
+            card.querySelector('.p-name').textContent = p.label + ' (' + p.id + ')';
+            card.querySelector('.p-desc').textContent = p.description || '';
+            if (p.defaultModel) card.querySelector('.p-model').textContent = p.defaultModel;
+            grid.appendChild(card);
+          });
+          if (!grid.children.length) {
+            grid.innerHTML = '<div class="card" style="color:var(--muted)">No providers reported.</div>';
+          }
+        })
+        .catch(function () {
+          grid.innerHTML = '<div class="card" style="color:var(--muted)">Provider list unavailable while the API is offline.</div>';
+        });
+
+      // Copy buttons
+      document.querySelectorAll('.copy-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var code = document.getElementById(btn.getAttribute('data-copy'));
+          if (code && navigator.clipboard) {
+            navigator.clipboard.writeText(code.textContent).then(function () {
+              btn.textContent = 'copied';
+              setTimeout(function () { btn.textContent = 'copy'; }, 1200);
+            });
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

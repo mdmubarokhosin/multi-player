@@ -1,0 +1,37 @@
+# ============================================================
+# Cloudflare Pages local-dev secrets (used by `npm run dev`).
+# Copy this file to .dev.vars — .dev.vars is git-ignored.
+# In production, set the same variables in the Cloudflare dashboard:
+#   Settings > Environment variables (Production + Preview)
+# ============================================================
+
+DEFAULT_PROVIDER=openrouter
+
+OPENROUTER_API_KEY=sk-or-v1-replace-with-your-real-key
+OPENROUTER_MODEL=z-ai/glm-5.2:free
+
+GROQ_API_KEY=
+GROQ_MODEL=llama-3.3-70b-versatile
+
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.0-flash
+
+CUSTOM_BASE_URL=
+CUSTOM_API_KEY=
+CUSTOM_MODEL=
+
+API_SECRET_KEY=
+ALLOWED_ORIGINS=*
+
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX=100
+CHAT_RATE_LIMIT_WINDOW_MS=60000
+CHAT_RATE_LIMIT_MAX=15
+
+MAX_MESSAGE_LENGTH=8000
+MAX_MESSAGES=50
+MAX_TOKENS_LIMIT=8192
+PROVIDER_TIMEOUT_MS=60000
+
+APP_URL=http://localhost:8788
+NODE_ENV=development

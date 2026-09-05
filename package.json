@@ -1,0 +1,38 @@
+{
+  "name": "ai-gateway-api",
+  "version": "2.0.0",
+  "description": "Production-ready multi-provider AI gateway REST API. Deploy on Cloudflare Pages or run on Node.js. Pluggable provider architecture (OpenRouter, Groq, Gemini, any custom OpenAI-compatible endpoint).",
+  "type": "module",
+  "main": "src/index.js",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && wrangler pages dev out",
+    "dev:node": "node server.node.js",
+    "start": "node server.node.js",
+    "deploy": "wrangler pages deploy out",
+    "smoke": "node scripts/smoke-test.mjs"
+  },
+  "keywords": [
+    "ai",
+    "gateway",
+    "rest-api",
+    "openrouter",
+    "groq",
+    "gemini",
+    "cloudflare-pages",
+    "hono",
+    "llm"
+  ],
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^1.13.0",
+    "dotenv": "^16.4.5",
+    "wrangler": "^4.0.0"
+  }
+}

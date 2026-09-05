@@ -1,0 +1,6 @@
+# Cloudflare Pages configuration.
+# When this file exists, Cloudflare Pages reads the build output directory
+# from here (must match the dashboard Build output: "out").
+name = "ai-gateway-api"
+compatibility_date = "2025-03-01"
+pages_build_output_dir = "out"
